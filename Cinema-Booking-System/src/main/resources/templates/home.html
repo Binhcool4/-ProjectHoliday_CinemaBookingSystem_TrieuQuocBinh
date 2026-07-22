@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Home</title>
+</head>
+<body>
+<h2>Trang chủ</h2>
+
+<p>Email: <span th:text="${user.email}"></span></p>
+<p>Role: <span th:text="${user.role}"></span></p>
+
+<p>Tên: <span th:text="${user.name}"></span></p>
+<p>Số điện thoại: <span th:text="${user.phone}"></span></p>
+<p>Địa chỉ: <span th:text="${user.address}"></span></p>
+
+<a th:href="@{/profile}">Cập nhật thông tin</a>
+<br><br>
+<a th:href="@{/logout}">Đăng xuất</a>
+
+</body>
+</html>

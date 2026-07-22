@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang Chủ Phim - SCBS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/scbs.css}" rel="stylesheet">
+</head>
+<body class="bg-black">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+        <div class="container">
+            <a class="navbar-brand font-weight-bold" href="/">Cinema System</a>
+            <div class="ms-auto d-flex text-white align-items-center">
+                <!-- Khi CHƯA đăng nhập -->
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="btn btn-outline-light me-2">Đăng nhập</a>
+                    <a th:href="@{/register}" class="btn btn-primary">Đăng ký</a>
+                </div>
+                <!-- Khi ĐÃ đăng nhập -->
+                <div sec:authorize="isAuthenticated()">
+                    <span class="me-3">Xin chào, <b class="text-white" sec:authentication="name"></b>!</span>
+                    <span sec:authorize="hasAuthority('ROLE_ADMIN')">
+                        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-warning me-2">Trang Quản Trị</a>
+                    </span>
+                    <span sec:authorize="hasAuthority('ROLE_STAFF')">
+                        <a th:href="@{/staff/dashboard}" class="btn btn-sm btn-info me-2 text-white">Quầy Bán Vé</a>
+                    </span>
+                    <a th:href="@{/profile}" class="btn btn-sm btn-outline-light me-2">Hồ sơ cá nhân</a>
+                    <form th:action="@{/logout}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger">Đăng xuất</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <!-- Banner (Hero section) -->
+        <div class="p-5 mb-4 bg-light rounded-3 border">
+            <div class="container-fluid py-2 text-center">
+                <h1 class="display-5 fw-bold text-primary">Khám phá tất cả phim điện ảnh</h1>
+<!--                <p class="col-md-8 mx-auto fs-5 text-muted">Hệ thống đặt vé nhanh chóng (CORE-06), chọn ghế dễ dàng tại SCBS.</p>-->
+                <a href="#movies" class="btn btn-danger btn-lg mt-3 shadow">Xem Phim Ngay</a>
+            </div>
+        </div>
+        <h3 id="movies" class="mb-4 border-bottom pb-2 border-danger d-inline-block text-white">Phim Đang Chiếu</h3>
+
+        <!-- Hiển thị thông báo nếu mảng rỗng -->
+        <div th:if="${#lists.isEmpty(movies)}" class="alert alert-info">
+            Hiện tại chưa có bộ phim nào được cập nhật trên hệ thống.
+            <span sec:authorize="hasAuthority('ROLE_ADMIN')">
+                <a th:href="@{/admin/movies/create}" class="alert-link">Thêm phim ngay</a>.
+            </span>
+        </div>
+
+        <!-- Render phim lấy từ Database -->
+        <div class="row mt-3" th:unless="${#lists.isEmpty(movies)}">
+            <div class="col-md-3 mb-4" th:each="m : ${movies}">
+                <div class="card h-100 shadow-sm border-0">
+                    <img th:if="${m.posterUrl != null and !#strings.isEmpty(m.posterUrl)}"
+                         th:src="${m.posterUrl}"
+                         class="card-img-top movie-poster"
+                         th:alt="${m.title}">
+                    <div th:unless="${m.posterUrl != null and !#strings.isEmpty(m.posterUrl)}"
+                         class="movie-poster-placeholder d-flex align-items-center justify-content-center">
+                        [IMG]
+                    </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-truncate" th:text="${m.title}">Tên phim</h5>
+                        <p class="card-text text-muted small" th:text="${m.genre != null ? m.genre.name : 'Unknown'} + ' | ' + ${m.duration} + ' phút'">Thể loại</p>
+                        <!-- CORE-08 link to view showtimes -->
+                        <a th:href="@{/movie/{id}/showtimes(id=${m.id})}" class="btn btn-outline-primary w-100">Chọn Suất Chiếu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chon ghe - SCBS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/scbs.css}" rel="stylesheet">
+    <style>
+        .seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; }
+        .seat-box { min-height: 48px; }
+        .price-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+    <div class="container">
+        <a class="navbar-brand font-weight-bold" href="/">Smart Cinema System</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h3 class="mb-2" th:text="${showtime.movie.title}">Tên phim</h3>
+    <p class="text-muted">
+        Suất chiếu:
+        <b th:text="${#temporals.format(showtime.startTime, 'dd/MM/yyyy HH:mm')}"></b>
+        |
+        Phòng: <b th:text="${showtime.room.name}"></b>
+        |
+        Giá vé: <span class="badge bg-success" th:text="${#numbers.formatInteger(showtime.price, 0) + ' VND'}"></span>
+    </p>
+
+    <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
+
+    <form th:action="@{/booking/create}" method="post">
+        <input type="hidden" name="showtimeId" th:value="${showtime.id}">
+
+        <div class="alert alert-secondary text-center">MÀN HÌNH</div>
+
+        <div class="seat-grid mb-4">
+            <label th:each="seat : ${seats}"
+                   th:class="${#lists.contains(bookedSeatIds, seat.id) ? 'btn btn-outline-secondary disabled seat-box' : 'btn btn-outline-primary seat-box'}">
+                <input class="btn-check seat-checkbox"
+                       type="checkbox"
+                       name="seatIds"
+                       th:value="${seat.id}"
+                       th:disabled="${#lists.contains(bookedSeatIds, seat.id)}">
+                <span th:text="${seat.seatName}">A1</span>
+                <small th:if="${#lists.contains(bookedSeatIds, seat.id)}" class="d-block">Đã đặt</small>
+            </label>
+        </div>
+
+        <!-- Hiển thị thông tin giá và tổng tiền -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Số ghế đã chọn:</strong>
+                            <span id="selectedCount" class="price-display">0</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Giá mỗi ghế:</strong>
+                            <span id="pricePerSeat" class="price-display" th:text="${#numbers.formatInteger(showtime.price, 0) + ' VND'}"></span>
+                        </p>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Tổng tiền:</strong>
+                            <span id="totalPrice" class="price-display">0 VND</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg">Xác nhận đặt vé</button>
+        <a th:href="@{/movie/{id}/showtimes(id=${showtime.movie.id})}" class="btn btn-secondary btn-lg">Quay lại</a>
+    </form>
+</div>
+
+<script>
+    const pricePerSeat = [[${showtime.price}]];
+    const seatCheckboxes = document.querySelectorAll('input.seat-checkbox');
+
+    function updateTotal() {
+        const checkedCount = document.querySelectorAll('input.seat-checkbox:checked').length;
+        const total = checkedCount * pricePerSeat;
+
+        document.getElementById('selectedCount').textContent = checkedCount;
+        document.getElementById('totalPrice').textContent =
+            new Intl.NumberFormat('vi-VN').format(total) + ' VND';
+    }
+
+    // Khởi tạo giá trị ban đầu
+    updateTotal();
+
+    // Cập nhật khi chọn/bỏ chọn ghế
+    seatCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateTotal);
+    });
+</script>
+
+</body>
+</html>

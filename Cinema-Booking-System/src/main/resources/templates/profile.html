@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Ho so ca nhan - SCBS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/scbs.css}" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary p-3">
+    <div class="container">
+        <a class="navbar-brand" href="/">Cinema System</a>
+        <div class="ms-auto d-flex align-items-center text-white">
+            <span class="me-3">Xin chào, <b sec:authentication="name"></b>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn btn-sm btn-danger" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <img th:src="${'https://ui-avatars.com/api/?name=' + user.username + '&background=random'}" class="rounded-circle mb-3" width="100" alt="Avatar">
+                    <h4 th:text="${user.username}">Tài khoản</h4>
+                    <p class="text-muted" th:text="${user.role}">Role</p>
+                    <hr>
+                    <div class="text-start">
+                        <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+                        <p><strong>Số DT:</strong> <span th:text="${user.phone ?: 'Chưa cập nhật'}"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Lịch sử đặt vé </h5>
+                </div>
+                <div class="card-body">
+                    <div th:if="${msgSuccess}" class="alert alert-success" th:text="${msgSuccess}"></div>
+                    <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
+
+                    <div class="list-group">
+                        <div th:each="b : ${bookings}" class="list-group-item mb-3 border rounded">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-primary" th:text="${'Phim: ' + b.movieTitle}">Phim</h6>
+                                <small th:class="${b.status != null and b.status.name() == 'CANCELLED' ? 'text-danger fw-bold' : 'text-success fw-bold'}"
+                                       th:text="${b.status}">Trạng thái</small>
+                            </div>
+                            <p class="mb-1">
+                                Suat chieu:
+                                <b th:text="${b.showtimeStart != null ? #temporals.format(b.showtimeStart, 'dd/MM/yyyy HH:mm') : 'N/A'}"></b>
+                                <span th:text="${' | ' + b.roomName}"></span>
+                            </p>
+                            <p class="mb-1">
+                                Ghế:
+                                <b th:text="${#strings.listJoin(b.seatNames, ', ')}">A1</b>
+                            </p>
+                            <small>
+                                Mã đơn: #<span th:text="${b.bookingId}"></span>
+                                -
+                                Tổng tiền: <b th:text="${b.totalPrice != null ? b.totalPrice + ' VND' : '0 VND'}"></b>
+                            </small>
+
+                            <div class="mt-2 text-end" th:if="${b.cancellable}">
+                                <form th:action="@{/booking/cancel}" method="post">
+                                    <input type="hidden" name="bookingId" th:value="${b.bookingId}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Bạn có chắc chắn muốn hủy đơn và giải phóng ghế?')">
+                                        Hủy vé
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="mt-2 text-end" th:if="${!b.cancellable and (b.status == null or b.status.name() != 'CANCELLED')}">
+                                <small class="text-muted">Không thể hủy vé khi phim đã bắt đầu hoặc đã kết thúc.</small>
+                            </div>
+                        </div>
+
+                        <div th:if="${#lists.isEmpty(bookings)}" class="text-center p-3 text-muted">
+                            <em>Bạn chưa có lịch sử đặt vé nào.</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Suất Chiếu - SCBS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/scbs.css}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+        <div class="container"><a class="navbar-brand font-weight-bold" href="/">Cinema System</a></div>
+    </nav>
+    <div class="container mt-4">
+        <h2 class="mb-4">Danh sách Suất Chiếu</h2>
+        <a th:href="@{/admin/showtimes/create}" class="btn btn-primary mb-3">+ Thêm Suất Chiếu</a>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr><th>ID</th><th>Phim</th><th>Phòng</th><th>Bắt đầu</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="s : ${showtimes}">
+                    <td th:text="${s.id}"></td>
+                    <td th:text="${s.movie.title}"></td>
+                    <td th:text="${s.room.name}"></td>
+                    <td th:text="${#temporals.format(s.startTime, 'dd/MM/yyyy HH:mm')}"></td>
+                </tr>
+            </tbody>
+        </table>
+        <a th:href="@{/admin/dashboard}" class="btn btn-secondary mt-3">Về Bảng Điều Khiển</a>
+    </div>
+</body>
+</html>
+

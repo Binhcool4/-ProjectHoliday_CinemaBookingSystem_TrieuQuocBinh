@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff - Tra cứu hóa đơn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container my-4">
+    <h3>Tra cứu hóa đơn người dùng</h3>
+
+    <form th:action="@{/staff/user-invoices}" method="post" class="row g-2 mb-3">
+        <div class="col-auto">
+            <input type="text" name="q" class="form-control" placeholder="Nhập email hoặc username" required>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" type="submit">Tìm</button>
+        </div>
+    </form>
+
+    <div th:if="${error}" class="alert alert-warning" th:text="${error}"></div>
+
+    <div th:if="${user != null}">
+        <h5>Người dùng: <span th:text="${user.username}">user</span> (<span th:text="${user.email}">email</span>)</h5>
+
+        <table class="table table-sm table-hover">
+            <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Phim</th>
+                <th>Suất</th>
+                <th>Ghế</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${history}">
+                <td th:text="${item.bookingId}">1</td>
+                <td th:text="${item.movieTitle}">Title</td>
+                <td th:text="${#temporals.format(item.showtimeStart, 'dd/MM HH:mm')}">start</td>
+                <td>
+                    <span th:each="s : ${item.seatNames}" th:text="${s} + ' '" />
+                </td>
+                <td th:text="${item.totalPrice}">0</td>
+                <td th:text="${item.status}">PENDING</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(history)}">
+                <td colspan="6" class="text-muted">Chưa có booking</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
