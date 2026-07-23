@@ -178,7 +178,44 @@ public class MainController {
     }
 
     @GetMapping("/staff/dashboard")
-    public String staffDashboard() {
+    public String staffDashboard(@RequestParam(required = false) String q, Model model) {
+        List<Booking> bookings = new ArrayList<>();
+        if (q != null && !q.trim().isEmpty()) {
+            String query = q.trim();
+            // 1. Check if query is numeric (Booking ID)
+            if (query.matches("\\d+")) {
+                Booking booking = bookingRepository.findByIdWithTickets(Long.parseLong(query));
+                if (booking != null) {
+                    bookings.add(booking);
+                }
+            }
+            // 2. If not found or not numeric, search by user email or username
+            if (bookings.isEmpty()) {
+                User user = userRepository.findByEmail(query);
+                if (user == null) {
+                    user = userRepository.findByUsername(query);
+                }
+                if (user != null) {
+                    bookings = bookingRepository.findHistoryByUserId(user.getId());
+                }
+            }
+
+            if (bookings.isEmpty()) {
+                model.addAttribute("searchError", "Không tìm thấy đơn đặt vé nào khớp với: " + q);
+            } else {
+                model.addAttribute("searchedQuery", q);
+            }
+        } else {
+            // Retrieve recent bookings
+            bookings = bookingRepository.findAll();
+            // Sort by ID descending
+            bookings.sort((b1, b2) -> b2.getId().compareTo(b1.getId()));
+            // Limit to last 15 bookings
+            if (bookings.size() > 15) {
+                bookings = bookings.subList(0, 15);
+            }
+        }
+        model.addAttribute("bookings", bookings);
         return "staff/dashboard";
     }
 
@@ -188,22 +225,24 @@ public class MainController {
         return formatter.format(safeAmount) + " VND";
     }
 
-    // Thêm vào MainController
-    @PostMapping("/staff/search-bookings-by-email")
-    public String searchBookingsByEmail(@RequestParam String email, Model model) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            model.addAttribute("searchError", "Không tìm thấy khách hàng với email: " + email);
-            return "staff/dashboard";
-        }
-        List<Booking> bookings = bookingRepository.findHistoryByUserId(user.getId());
-        if (bookings.isEmpty()) {
-            model.addAttribute("searchError", "Khách hàng " + email + " chưa có đơn đặt vé nào.");
+    @PostMapping("/staff/confirm-booking")
+    public String confirmBooking(@RequestParam Long bookingId, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            booking.setStatus(BookingStatus.CONFIRMED);
+            bookingRepository.save(booking);
+            redirectAttributes.addFlashAttribute("msgSuccess", "Đã xác nhận thanh toán đơn hàng #" + bookingId + " thành công!");
         } else {
-            model.addAttribute("searchedBookings", bookings);
-            model.addAttribute("searchedUser", user);
+            redirectAttributes.addFlashAttribute("msgError", "Không tìm thấy đơn hàng #" + bookingId);
         }
-        return "staff/dashboard";
+        return "redirect:/staff/dashboard";
+    }
+
+    @PostMapping("/staff/print-ticket")
+    public String printTicket(@RequestParam Long bookingId, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("msgSuccess", "Đã gửi lệnh in vé giấy cho đơn hàng #" + bookingId + " thành công!");
+        return "redirect:/staff/dashboard";
     }
     @GetMapping("/staff/user-invoices")
     public String staffUserInvoicesForm() {
